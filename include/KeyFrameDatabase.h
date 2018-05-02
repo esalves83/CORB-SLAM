@@ -28,46 +28,48 @@
 #include "KeyFrame.h"
 #include "Frame.h"
 #include "ORBVocabulary.h"
-
+#include "LightKeyFrame.h"
 #include<mutex>
 
 
-namespace ORB_SLAM2
-{
+namespace ORB_SLAM2 {
 
-class KeyFrame;
-class Frame;
+    class KeyFrame;
 
+    class Frame;
 
-class KeyFrameDatabase
-{
-public:
+    class LightKeyFrame;
 
-    KeyFrameDatabase(const ORBVocabulary &voc);
+    class KeyFrameDatabase {
 
-   void add(KeyFrame* pKF);
+    public:
+        KeyFrameDatabase(const ORBVocabulary &voc);
 
-   void erase(KeyFrame* pKF);
+        void add(KeyFrame *pKF);
 
-   void clear();
+        void erase(KeyFrame *pKF);
 
-   // Loop Detection
-   std::vector<KeyFrame *> DetectLoopCandidates(KeyFrame* pKF, float minScore);
+        void clear();
 
-   // Relocalization
-   std::vector<KeyFrame*> DetectRelocalizationCandidates(Frame* F);
+        // Loop Detection
+        std::vector<KeyFrame *> DetectLoopCandidates(KeyFrame *pKF, float minScore);
 
-protected:
+        // Relocalization
+        std::vector<KeyFrame *> DetectRelocalizationCandidates(Frame *F);
 
-  // Associated vocabulary
-  const ORBVocabulary* mpVoc;
+        std::vector<KeyFrame *> DetectMapFusionCandidatesFromDB(KeyFrame *pKF);
 
-  // Inverted file
-  std::vector<list<KeyFrame*> > mvInvertedFile;
+    protected:
 
-  // Mutex
-  std::mutex mMutex;
-};
+        // Associated vocabulary
+        const ORBVocabulary *mpVoc;
+
+        // Inverted file
+        std::vector<list<LightKeyFrame> > mvInvertedFile;
+
+        // Mutex
+        std::mutex mMutex;
+    };
 
 } //namespace ORB_SLAM
 

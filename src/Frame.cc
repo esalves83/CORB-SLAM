@@ -26,7 +26,7 @@
 namespace ORB_SLAM2
 {
 
-long unsigned int Frame::nNextId=0;
+long unsigned int Frame::nNextId=1;
 bool Frame::mbInitialComputations=true;
 float Frame::cx, Frame::cy, Frame::fx, Frame::fy, Frame::invfx, Frame::invfy;
 float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
@@ -60,7 +60,7 @@ Frame::Frame(const Frame &frame)
 
 Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractorLeft),mpORBextractorRight(extractorRight), mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
-     mpReferenceKF(static_cast<KeyFrame*>(NULL))
+     mpReferenceKF(static_cast<KeyFrame * >(NULL))
 {
     // Frame ID
     mnId=nNextId++;
@@ -89,7 +89,7 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
 
     ComputeStereoMatches();
 
-    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));    
+    mvpMapPoints = vector<LightMapPoint>(N,static_cast<LightMapPoint>(NULL));
     mvbOutlier = vector<bool>(N,false);
 
 
@@ -144,7 +144,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 
     ComputeStereoFromRGBD(imDepth);
 
-    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
+    mvpMapPoints = vector<LightMapPoint>(N,static_cast<LightMapPoint>(NULL));
     mvbOutlier = vector<bool>(N,false);
 
     // This is done only for the first Frame (or after a change in the calibration)
@@ -201,7 +201,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mvuRight = vector<float>(N,-1);
     mvDepth = vector<float>(N,-1);
 
-    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
+    mvpMapPoints = vector<LightMapPoint>(N,static_cast<LightMapPoint>(NULL));
     mvbOutlier = vector<bool>(N,false);
 
     // This is done only for the first Frame (or after a change in the calibration)
@@ -266,6 +266,7 @@ void Frame::UpdatePoseMatrices()
     mOw = -mRcw.t()*mtcw;
 }
 
+
 bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
 {
     pMP->mbTrackInView = false;
@@ -280,10 +281,11 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
     const float &PcZ = Pc.at<float>(2);
 
     // Check positive depth
-    if(PcZ<0.0f)
+    if(!( PcZ > 0.0f) )
         return false;
 
     // Project in image and check it is not outside
+
     const float invz = 1.0f/PcZ;
     const float u=fx*PcX*invz+cx;
     const float v=fy*PcY*invz+cy;
@@ -312,6 +314,8 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
 
     // Predict scale in the image
     const int nPredictedLevel = pMP->PredictScale(dist,this);
+
+//    cout << "<u:" << u << ",v:" << v << ">" << endl;
 
     // Data used by the tracking
     pMP->mbTrackInView = true;
@@ -678,5 +682,22 @@ cv::Mat Frame::UnprojectStereo(const int &i)
     else
         return cv::Mat();
 }
+
+    std::vector<MapPoint *> Frame::GetMapPointMatches() {
+        vector<MapPoint * > tmvps;
+        for( int mit = 0; mit < (int) mvpMapPoints.size(); mit++) {
+            //if( mvpMapPoints[mit].getMapPoint())
+            tmvps.push_back( mvpMapPoints[mit].getMapPoint() );
+        }
+        return tmvps;
+    }
+    void Frame::setMapPointMatches(std::vector<MapPoint *> pMPs) {
+
+        mvpMapPoints.clear();
+        for( int mit = 0; mit < (int) pMPs.size(); mit++) {
+            LightMapPoint tLMP( pMPs[mit] );
+            mvpMapPoints.push_back( tLMP );
+        }
+    }
 
 } //namespace ORB_SLAM

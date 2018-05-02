@@ -28,6 +28,7 @@
 #include "Tracking.h"
 
 #include "KeyFrameDatabase.h"
+#include "Cache.h"
 
 #include <thread>
 #include <mutex>
@@ -39,7 +40,7 @@ namespace ORB_SLAM2
 class Tracking;
 class LocalMapping;
 class KeyFrameDatabase;
-
+class Cache;
 
 class LoopClosing
 {
@@ -51,7 +52,7 @@ public:
 
 public:
 
-    LoopClosing(Map* pMap, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,const bool bFixScale);
+    LoopClosing(Cache * pCacher,const bool bFixScale);
 
     void SetTracker(Tracking* pTracker);
 
@@ -79,7 +80,7 @@ public:
     void RequestFinish();
 
     bool isFinished();
-
+    
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 protected:
@@ -104,11 +105,8 @@ protected:
     bool mbFinished;
     std::mutex mMutexFinish;
 
-    Map* mpMap;
+    Cache* mpCacher;
     Tracking* mpTracker;
-
-    KeyFrameDatabase* mpKeyFrameDB;
-    ORBVocabulary* mpORBVocabulary;
 
     LocalMapping *mpLocalMapper;
 
@@ -141,7 +139,6 @@ protected:
 
     // Fix scale in the stereo/RGB-D case
     bool mbFixScale;
-
 
     bool mnFullBAIdx;
 };

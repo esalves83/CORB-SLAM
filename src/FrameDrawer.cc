@@ -91,6 +91,7 @@ cv::Mat FrameDrawer::DrawFrame()
         mnTracked=0;
         mnTrackedVO=0;
         const float r = 5;
+        //for(int i=0;i<N;i++)
         const int n = vCurrentKeys.size();
         for(int i=0;i<n;i++)
         {
@@ -184,7 +185,7 @@ void FrameDrawer::Update(Tracking *pTracker)
     {
         for(int i=0;i<N;i++)
         {
-            MapPoint* pMP = pTracker->mCurrentFrame.mvpMapPoints[i];
+            MapPoint* pMP = pTracker->mCurrentFrame.mvpMapPoints[i].getMapPoint();
             if(pMP)
             {
                 if(!pTracker->mCurrentFrame.mvbOutlier[i])

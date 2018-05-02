@@ -29,7 +29,8 @@
 #include "ORBVocabulary.h"
 #include "KeyFrame.h"
 #include "ORBextractor.h"
-
+#include "LightMapPoint.h"
+#include "LightKeyFrame.h"
 #include <opencv2/opencv.hpp>
 
 namespace ORB_SLAM2
@@ -39,7 +40,8 @@ namespace ORB_SLAM2
 
 class MapPoint;
 class KeyFrame;
-
+class LightMapPoint;
+class LightKeyFrame;
 class Frame
 {
 public:
@@ -65,6 +67,9 @@ public:
 
     // Set the camera pose.
     void SetPose(cv::Mat Tcw);
+
+    std::vector<MapPoint *> GetMapPointMatches();
+    void setMapPointMatches( std::vector<MapPoint *> pMPs );
 
     // Computes rotation, translation and camera center matrices from the camera pose.
     void UpdatePoseMatrices();
@@ -150,7 +155,7 @@ public:
     cv::Mat mDescriptors, mDescriptorsRight;
 
     // MapPoints associated to keypoints, NULL pointer if no association.
-    std::vector<MapPoint*> mvpMapPoints;
+    std::vector<LightMapPoint> mvpMapPoints;
 
     // Flag to identify outlier associations.
     std::vector<bool> mvbOutlier;
@@ -168,7 +173,7 @@ public:
     long unsigned int mnId;
 
     // Reference Keyframe.
-    KeyFrame* mpReferenceKF;
+    KeyFrame * mpReferenceKF;
 
     // Scale pyramid info.
     int mnScaleLevels;

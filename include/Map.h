@@ -24,61 +24,81 @@
 #include "MapPoint.h"
 #include "KeyFrame.h"
 #include <set>
-
+#include "LightMapPoint.h"
+#include "SerializeObject.h"
 #include <mutex>
 
 
+namespace ORB_SLAM2 {
 
-namespace ORB_SLAM2
-{
+    class MapPoint;
 
-class MapPoint;
-class KeyFrame;
+    class KeyFrame;
 
-class Map
-{
-public:
-    Map();
+    class LightMapPoint;
 
-    void AddKeyFrame(KeyFrame* pKF);
-    void AddMapPoint(MapPoint* pMP);
-    void EraseMapPoint(MapPoint* pMP);
-    void EraseKeyFrame(KeyFrame* pKF);
-    void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
-    void InformNewBigChange();
-    int GetLastBigChangeIdx();
+    class Map {
+    private:
+        friend class boost::serialization::access;
 
-    std::vector<KeyFrame*> GetAllKeyFrames();
-    std::vector<MapPoint*> GetAllMapPoints();
-    std::vector<MapPoint*> GetReferenceMapPoints();
+        //serialize LightKeyFrame class
+        template<class Archive>
+        void serialize(Archive &ar, const unsigned int version) {
+            ar & mspMapPoints;
+            ar & mspKeyFrames;
+            ar & mvpReferenceMapPoints;
+            ar & mnMaxKFid;
+        }
 
-    long unsigned int MapPointsInMap();
-    long unsigned  KeyFramesInMap();
+    public:
+        Map();
 
-    long unsigned int GetMaxKFid();
+        void AddKeyFrame(KeyFrame *pKF);
 
-    void clear();
+        void AddMapPoint(MapPoint *pMP);
 
-    vector<KeyFrame*> mvpKeyFrameOrigins;
+        void EraseMapPoint(MapPoint *pMP);
 
-    std::mutex mMutexMapUpdate;
+        void EraseKeyFrame(KeyFrame *pKF);
 
-    // This avoid that two points are created simultaneously in separate threads (id conflict)
-    std::mutex mMutexPointCreation;
+        void transKeyframeToBack(KeyFrame *pKF );
 
-protected:
-    std::set<MapPoint*> mspMapPoints;
-    std::set<KeyFrame*> mspKeyFrames;
+        void SetReferenceMapPoints(const std::vector<MapPoint *> &vpMPs);
 
-    std::vector<MapPoint*> mvpReferenceMapPoints;
+        std::vector<KeyFrame *> GetAllKeyFrames();
 
-    long unsigned int mnMaxKFid;
+        std::vector<MapPoint *> GetAllMapPoints();
 
-    // Index related to a big change in the map (loop closure, global BA)
-    int mnBigChangeIdx;
+        std::vector<MapPoint *> GetReferenceMapPoints();
 
-    std::mutex mMutexMap;
-};
+        long unsigned int MapPointsInMap();
+
+        long unsigned KeyFramesInMap();
+
+        long unsigned int GetMaxKFid();
+
+        void clear();
+
+        vector<KeyFrame *> mvpKeyFrameOrigins;
+
+        std::mutex mMutexMapUpdate;
+
+        // This avoid that two points are created simultaneously in separate threads (id conflict)
+        std::mutex mMutexPointCreation;
+
+    protected:
+        std::set<MapPoint *> mspMapPoints;
+        std::set<KeyFrame *> mspKeyFrames;
+
+        std::vector<LightMapPoint> mvpReferenceMapPoints;
+
+        long unsigned int mnMaxKFid;
+
+        std::mutex mMutexMap;
+        std::mutex mMutexMPs;
+        std::mutex mMutexKFs;
+        std::mutex mMutexRFMPs;
+    };
 
 } //namespace ORB_SLAM
 

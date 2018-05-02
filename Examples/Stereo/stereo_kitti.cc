@@ -27,6 +27,8 @@
 
 #include<opencv2/core/core.hpp>
 
+#include<glob.h>
+
 #include<System.h>
 
 using namespace std;
@@ -36,11 +38,15 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
 
 int main(int argc, char **argv)
 {
-    if(argc != 4)
+    if(argc != 5)
     {
-        cerr << endl << "Usage: ./stereo_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;
+        cerr << endl << "Usage: ./stereo_kitti path_to_vocabulary path_to_settings path_to_sequence agent_id" << endl;
         return 1;
     }
+    
+    istringstream ss(argv[4]);
+    int x;
+    ss >> x;
 
     // Retrieve paths to images
     vector<string> vstrImageLeft;
@@ -51,7 +57,7 @@ int main(int argc, char **argv)
     const int nImages = vstrImageLeft.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::STEREO,true);
+    ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::STEREO,true,x);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
@@ -105,9 +111,14 @@ int main(int argc, char **argv)
 
         if(ttrack<T)
             usleep((T-ttrack)*1e6);
+        
+        //cout << vstrImageLeft[ni] << endl;
     }
+    
+    while(1);
 
     // Stop all threads
+    cout << "Shutdown request..." << endl;
     SLAM.Shutdown();
 
     // Tracking time statistics
@@ -147,18 +158,35 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
         }
     }
 
-    string strPrefixLeft = strPathToSequence + "/image_0/";
-    string strPrefixRight = strPathToSequence + "/image_1/";
+    string strPrefixLeft = strPathToSequence + "image_0/";
+    string strPrefixRight = strPathToSequence + "image_1/";
 
     const int nTimes = vTimestamps.size();
     vstrImageLeft.resize(nTimes);
     vstrImageRight.resize(nTimes);
+    
+    glob_t glob_result_Left, glob_result_Right;
+    
+    glob((strPrefixLeft+"*").c_str(),GLOB_TILDE,NULL,&glob_result_Left);
+    glob((strPrefixRight+"*").c_str(),GLOB_TILDE,NULL,&glob_result_Right);
+    
+    /*for(unsigned int i=0;i<glob_result.gl_pathc;++i){
+        cout << glob_result.gl_pathv[i] << endl;
+    }*/    
 
     for(int i=0; i<nTimes; i++)
     {
-        stringstream ss;
-        ss << setfill('0') << setw(6) << i;
-        vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
-        vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+        //stringstream ss;
+        //ss << setfill('0') << setw(6) << i;
+        //vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
+        //vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+        
+        //cout << string(glob_result_Left.gl_pathv[i]) << endl;
+        
+        vstrImageLeft[i] = string(glob_result_Left.gl_pathv[i]);
+        vstrImageRight[i] = string(glob_result_Right.gl_pathv[i]);
     }
+    
+    globfree(&glob_result_Left);
+    globfree(&glob_result_Right);
 }

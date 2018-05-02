@@ -26,6 +26,7 @@
 #include "LoopClosing.h"
 #include "Tracking.h"
 #include "KeyFrameDatabase.h"
+#include "Cache.h"
 
 #include <mutex>
 
@@ -36,11 +37,12 @@ namespace ORB_SLAM2
 class Tracking;
 class LoopClosing;
 class Map;
+class Cache;
 
 class LocalMapping
 {
 public:
-    LocalMapping(Map* pMap, const float bMonocular);
+    LocalMapping(Cache* pCacher, const float bMonocular);
 
     void SetLoopCloser(LoopClosing* pLoopCloser);
 
@@ -99,7 +101,7 @@ protected:
     bool mbFinished;
     std::mutex mMutexFinish;
 
-    Map* mpMap;
+    Cache* mpCacher;
 
     LoopClosing* mpLoopCloser;
     Tracking* mpTracker;
